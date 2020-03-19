@@ -2,25 +2,46 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
 
-	<bean id="myProcessor" class="com.example.demo.MyProcessor"/>
-	
+	<bean id="myProcessor" class="com.example.demo.processor.MyProcessor"/>
+	<bean id="empProcessor" class="com.example.demo.processor.EmpProcessor"/>
 	
     <camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
     
     <restConfiguration component="servlet" />
     <rest>
-    	<get uri="/persons" >
+    	<get uri="/date" >
             <to uri="direct:date"/>
          </get>
+         <post uri="/employee" consumes="application/xml" produces="application/xml">
+		 	<to uri="direct:getEmp"/>
+		 </post>
     </rest>
-    	<route id="test">
-            <from uri="direct:date"/>
-            <process ref="myProcessor"/>
-            <transform>
-                <simple>${body}</simple>
-            </transform>
-            
-            <to uri="log:out"/>
-        </route>
+    
+    
+    <route id="test">
+    	<from uri="direct:date"/>
+    	<process ref="myProcessor"/>
+    	<transform>
+         	<simple>${body}</simple>
+        </transform>
+        <to uri="log:out"/>
+     </route>
+        
+     <route id="getEmp">
+     	<from uri="direct:getEmp"/>
+     	<setHeader headerName="empId">
+			<xpath resultType="java.lang.String">//empId/text()</xpath>
+		</setHeader>
+		<setBody> 
+			<simple>${in.headers.empId}</simple> 
+		</setBody> 
+        <process ref="empProcessor"/>
+        <transform>
+        	<simple>${body}</simple>
+        </transform>
+        <to uri="log:out"/>
+    </route>
+    
+    
     </camelContext>
 </beans>
